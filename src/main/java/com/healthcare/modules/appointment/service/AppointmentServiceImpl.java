@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -146,6 +147,29 @@ public class AppointmentServiceImpl implements AppointmentService {
         return AppointmentResponseDTO.fromEntity(findAppointmentById);
 
     }
+
+    @Override
+    public PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, LocalDate date) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+
+        Page<AppointmentEntity> result = appointmentRepository
+                .findByAppointmentDateTimeBetween(startOfDay, endOfDay, pageable);
+
+        return new PageResponse<>(
+                result.getContent().stream()
+                        .map(AppointmentResponseDTO::fromEntity)
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
+    }
+
 
     @Override
     public AppointmentEntity findAppointmentEntityById(UUID id) {

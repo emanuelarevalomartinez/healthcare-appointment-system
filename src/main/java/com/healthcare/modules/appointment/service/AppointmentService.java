@@ -6,6 +6,7 @@ import com.healthcare.modules.appointment.dto.UpdateAppointmentDTO;
 import com.healthcare.modules.appointment.entity.AppointmentEntity;
 import com.healthcare.shared.response.PageResponse;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 public interface AppointmentService {
@@ -13,6 +14,7 @@ public interface AppointmentService {
     AppointmentResponseDTO updateAppointment(UUID id, UpdateAppointmentDTO updateAppointmentDTO);
     PageResponse<AppointmentResponseDTO> findAllAppointments(int page, int size);
     AppointmentResponseDTO findAppointmentById(UUID id);
+    PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, LocalDate date);
     AppointmentEntity findAppointmentEntityById(UUID id);
     void deleteAppointment(UUID id);
 

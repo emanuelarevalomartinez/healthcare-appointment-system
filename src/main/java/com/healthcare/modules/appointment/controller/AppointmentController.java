@@ -9,10 +9,12 @@ import com.healthcare.shared.response.ApiResponse;
 import com.healthcare.shared.response.PageResponse;
 import com.healthcare.shared.response.ResponseHandler;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
@@ -49,6 +51,22 @@ public class AppointmentController {
                 HttpStatus.OK,
                 null,
                 appointment
+        );
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<PageResponse<AppointmentResponseDTO>>> findAppointmentsFiltered(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+
+        PageResponse<AppointmentResponseDTO> appointments = this.appointmentService.findAppointmentsFiltered(page, size, date);
+
+        return ResponseHandler.generateResponse(
+                HttpStatus.OK,
+                null,
+                appointments
         );
     }
 
