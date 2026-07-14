@@ -2,9 +2,7 @@ package com.healthcare.config.security;
 
 public class SecurityConstants {
 
-   // public static final long JWT_EXPIRATION = 900000; // 15 minutes
-   public static final long JWT_EXPIRATION = 10_000L; // 15 minutes
-   // public static final long REFRESH_EXPIRATION = 1000 * 60 * 60 * 24; // 24h
-     public static final long REFRESH_EXPIRATION = 30_000L;
+    public static final long JWT_EXPIRATION = 15 * 60 * 1000; // 15 minutes
+    public static final long REFRESH_EXPIRATION = 15 * 24 * 60 * 60 * 1000; // 15 days
 
 }
