@@ -53,7 +53,7 @@ public class PatientController {
         );
     }
 
-    @GetMapping("filter")
+    @GetMapping("/filter")
     public ResponseEntity<ApiResponse<PageResponse<PatientResponseDTO>>> findPatientsByFilters(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Sex sex,

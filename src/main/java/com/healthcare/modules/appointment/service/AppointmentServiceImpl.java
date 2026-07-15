@@ -6,9 +6,11 @@ import com.healthcare.modules.appointment.dto.UpdateAppointmentDTO;
 import com.healthcare.modules.appointment.entity.AppointmentEntity;
 import com.healthcare.modules.appointment.enums.AppointmentStatus;
 import com.healthcare.modules.appointment.repository.AppointmentRepository;
+import com.healthcare.modules.appointment.repository.specifications.AppointmentSpecifications;
 import com.healthcare.modules.doctor.entity.DoctorEntity;
 import com.healthcare.modules.doctor.service.DoctorService;
 import com.healthcare.modules.patient.entity.PatientEntity;
+import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.modules.patient.service.PatientService;
 import com.healthcare.modules.user.entity.UserEntity;
 import com.healthcare.modules.user.service.UserService;
@@ -16,9 +18,12 @@ import com.healthcare.shared.exceptions.ApplicationException;
 import com.healthcare.shared.exceptions.ErrorMessage;
 import com.healthcare.shared.providers.CustomUserDetails;
 import com.healthcare.shared.response.PageResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -27,6 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class AppointmentServiceImpl implements AppointmentService {
 
@@ -149,15 +155,27 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, LocalDate date) {
+    public PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, boolean ascending, LocalDate date, AppointmentStatus appointmentStatus, String patientFullName, String doctorUserName, String patientMedicalRecordNumber, DocumentType patientDocumentType, String patientDocumentNumber, String doctorSpecialty, String doctorLicenseNumber) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Specification<AppointmentEntity> spec = Specification
+                .where(AppointmentSpecifications.hasDate(date))
+                .and(AppointmentSpecifications.hasPatientFullName(patientFullName))
+                .and(AppointmentSpecifications.hasDoctorUsername(doctorUserName))
+                .and(AppointmentSpecifications.hasPatientMedicalRecordNumber(patientMedicalRecordNumber))
+                .and(AppointmentSpecifications.hasPatientDocumentNumber(patientDocumentNumber))
+                .and(AppointmentSpecifications.hasDocumentType(patientDocumentType))
+                .and(AppointmentSpecifications.hasDoctorSpecialty(doctorSpecialty))
+                .and(AppointmentSpecifications.hasDoctorLicenseNumber(doctorLicenseNumber))
+                .and(AppointmentSpecifications.hasAppointmentStatus(appointmentStatus));
 
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        Sort sort = Sort.by(
+                ascending ? Sort.Direction.ASC : Sort.Direction.DESC,
+                "appointmentDateTime"
+        );
 
-        Page<AppointmentEntity> result = appointmentRepository
-                .findByAppointmentDateTimeBetween(startOfDay, endOfDay, pageable);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<AppointmentEntity> result = appointmentRepository.findAll(spec, pageable);
 
         return new PageResponse<>(
                 result.getContent().stream()

@@ -4,7 +4,9 @@ package com.healthcare.modules.appointment.controller;
 import com.healthcare.modules.appointment.dto.AppointmentResponseDTO;
 import com.healthcare.modules.appointment.dto.CreateAppointmentDTO;
 import com.healthcare.modules.appointment.dto.UpdateAppointmentDTO;
+import com.healthcare.modules.appointment.enums.AppointmentStatus;
 import com.healthcare.modules.appointment.service.AppointmentService;
+import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.shared.response.ApiResponse;
 import com.healthcare.shared.response.PageResponse;
 import com.healthcare.shared.response.ResponseHandler;
@@ -58,10 +60,19 @@ public class AppointmentController {
     public ResponseEntity<ApiResponse<PageResponse<AppointmentResponseDTO>>> findAppointmentsFiltered(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
-    ) {
+            @RequestParam(defaultValue = "true") boolean ascending,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) AppointmentStatus appointmentStatus,
+            @RequestParam(required = false)String patientFullName,
+            @RequestParam(required = false)String doctorUserName,
+            @RequestParam(required = false)String patientMedicalRecordNumber,
+            @RequestParam(required = false)DocumentType patientDocumentType,
+            @RequestParam(required = false)String patientDocumentNumber,
+            @RequestParam(required = false)String doctorSpecialty,
+            @RequestParam(required = false)String doctorLicenseNumber
+            ) {
 
-        PageResponse<AppointmentResponseDTO> appointments = this.appointmentService.findAppointmentsFiltered(page, size, date);
+        PageResponse<AppointmentResponseDTO> appointments = this.appointmentService.findAppointmentsFiltered(page, size, ascending, date, appointmentStatus, patientFullName, doctorUserName, patientMedicalRecordNumber, patientDocumentType, patientDocumentNumber, doctorSpecialty, doctorLicenseNumber);
 
         return ResponseHandler.generateResponse(
                 HttpStatus.OK,
@@ -86,7 +97,7 @@ public class AppointmentController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<AppointmentResponseDTO>> updateAppointment(@PathVariable UUID id , @Valid @RequestBody UpdateAppointmentDTO updateAppointmentDTO) {
+    public ResponseEntity<ApiResponse<AppointmentResponseDTO>> updateAppointment(@PathVariable UUID id, @Valid @RequestBody UpdateAppointmentDTO updateAppointmentDTO) {
 
         AppointmentResponseDTO appointmentUpdate = this.appointmentService.updateAppointment(id, updateAppointmentDTO);
 
