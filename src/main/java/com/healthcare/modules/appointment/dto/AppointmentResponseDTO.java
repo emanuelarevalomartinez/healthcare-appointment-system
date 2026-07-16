@@ -18,10 +18,22 @@ public record AppointmentResponseDTO(
         LocalDateTime createdAt,
         LocalDateTime confirmedAt,
         LocalDateTime attendedAt,
-        String notes
+        String notes,
+        String patientFullName,
+        String doctorFullName
 ) {
 
     public static AppointmentResponseDTO fromEntity(AppointmentEntity appointment) {
+
+        String patientFullName = appointment.getPatient() != null
+                ? appointment.getPatient().getFullName()
+                : null;
+
+        String doctorFullName = null;
+
+        if (appointment.getDoctor() != null && appointment.getDoctor().getUser() != null) {
+            doctorFullName = appointment.getDoctor().getUser().getUsername();
+        }
 
         return new AppointmentResponseDTO(
                 appointment.getId(),
@@ -35,7 +47,9 @@ public record AppointmentResponseDTO(
                 appointment.getCreatedAt(),
                 appointment.getConfirmedAt(),
                 appointment.getAttendedAt(),
-                appointment.getNotes()
+                appointment.getNotes(),
+                patientFullName,
+                doctorFullName
         );
     }
 
