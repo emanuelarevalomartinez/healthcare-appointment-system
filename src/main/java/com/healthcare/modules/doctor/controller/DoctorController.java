@@ -60,13 +60,13 @@ public class DoctorController {
 
 
     @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<PageResponse<DoctorResponseDTO>>> findDoctorsFiltered(
+    public ResponseEntity<ApiResponse<PageResponse<DoctorResponseWithUserDTO>>> findDoctorsFiltered(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search
     ) {
 
-        PageResponse<DoctorResponseDTO> doctors = this.doctorService.findDoctorsFiltered(page, size, search);
+        PageResponse<DoctorResponseWithUserDTO> doctors = this.doctorService.findDoctorsFiltered(page, size, search);
 
         return ResponseHandler.generateResponse(
                 HttpStatus.OK,

@@ -289,12 +289,12 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
-    public PageResponse<DoctorResponseDTO> findDoctorsFiltered(int page, int size, String search) {
+    public PageResponse<DoctorResponseWithUserDTO> findDoctorsFiltered(int page, int size, String search) {
         Specification<DoctorEntity> spec = Specification.where(DoctorSpecifications.search(search));
 
         Pageable pageable = PageRequest.of(
                 page,
-                size,
+                Math.min(size, 10),
                 Sort.by(Sort.Direction.ASC, "licenseNumber")
         );
 
@@ -303,7 +303,11 @@ public class DoctorServiceImpl implements DoctorService {
         return new PageResponse<>(
                 result.getContent()
                         .stream()
-                        .map(DoctorResponseDTO::fromEntity)
+                        .map(doctor ->
+                                DoctorResponseWithUserDTO.fromEntity(
+                                        doctor.getUser(),
+                                        doctor)
+                        )
                         .toList(),
                 result.getNumber(),
                 result.getSize(),
