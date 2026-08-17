@@ -1,6 +1,5 @@
 package com.healthcare.modules.doctor.controller;
 
-
 import com.healthcare.modules.doctor.dto.*;
 import com.healthcare.modules.doctor.service.DoctorService;
 import com.healthcare.shared.response.ApiResponse;
@@ -56,6 +55,23 @@ public class DoctorController {
                 HttpStatus.OK,
                 null,
                 doctor
+        );
+    }
+
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<PageResponse<DoctorResponseDTO>>> findDoctorsFiltered(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search
+    ) {
+
+        PageResponse<DoctorResponseDTO> doctors = this.doctorService.findDoctorsFiltered(page, size, search);
+
+        return ResponseHandler.generateResponse(
+                HttpStatus.OK,
+                null,
+                doctors
         );
     }
 

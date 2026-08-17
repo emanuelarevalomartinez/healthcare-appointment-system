@@ -2,6 +2,7 @@ package com.healthcare.modules.doctor.service;
 
 import com.healthcare.modules.doctor.dto.*;
 import com.healthcare.modules.doctor.entity.DoctorEntity;
+import com.healthcare.modules.doctor.entity.specifications.DoctorSpecifications;
 import com.healthcare.modules.doctor.repository.DoctorRepository;
 import com.healthcare.modules.user.dto.UpdateUserDTO;
 import com.healthcare.modules.user.entity.UserEntity;
@@ -17,6 +18,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -167,8 +170,8 @@ public class DoctorServiceImpl implements DoctorService {
     @Override
     public DoctorResponseWithUserDTO updateDoctorWithUser(UUID userId, UpdateDoctorWithUserDTO updateDoctorWithUserDTO) {
 
-          UserEntity findUser = userService.findUserEntityById(userId);
-          DoctorEntity findDoctor = null;
+        UserEntity findUser = userService.findUserEntityById(userId);
+        DoctorEntity findDoctor = null;
 
         try {
             findDoctor = findDoctorEntityByUserId(userId);
@@ -283,6 +286,30 @@ public class DoctorServiceImpl implements DoctorService {
                 );
 
         return DoctorResponseDTO.fromEntity(findDoctorById);
+    }
+
+    @Override
+    public PageResponse<DoctorResponseDTO> findDoctorsFiltered(int page, int size, String search) {
+        Specification<DoctorEntity> spec = Specification.where(DoctorSpecifications.search(search));
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "licenseNumber")
+        );
+
+        Page<DoctorEntity> result = doctorRepository.findAll(spec, pageable);
+
+        return new PageResponse<>(
+                result.getContent()
+                        .stream()
+                        .map(DoctorResponseDTO::fromEntity)
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 
     @Override
