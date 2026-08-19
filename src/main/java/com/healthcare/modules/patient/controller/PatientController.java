@@ -1,5 +1,6 @@
 package com.healthcare.modules.patient.controller;
 
+import com.healthcare.modules.doctor.dto.DoctorResponseWithUserDTO;
 import com.healthcare.modules.patient.dto.UpdatePatientDTO;
 import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.modules.patient.enums.Sex;
@@ -53,7 +54,7 @@ public class PatientController {
         );
     }
 
-    @GetMapping("/filter")
+    @GetMapping("/filter/search")
     public ResponseEntity<ApiResponse<PageResponse<PatientResponseDTO>>> findPatientsByFilters(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Sex sex,
@@ -68,6 +69,22 @@ public class PatientController {
                 HttpStatus.OK,
                 null,
                 patientsFiltered
+        );
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<PageResponse<PatientResponseDTO>>> findDoctorsFiltered(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search
+    ) {
+
+        PageResponse<PatientResponseDTO> patients = this.patientService.findPatientsFiltered(page, size, search);
+
+        return ResponseHandler.generateResponse(
+                HttpStatus.OK,
+                null,
+                patients
         );
     }
 

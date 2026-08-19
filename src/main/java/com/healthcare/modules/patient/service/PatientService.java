@@ -1,5 +1,6 @@
 package com.healthcare.modules.patient.service;
 
+import com.healthcare.modules.doctor.dto.DoctorResponseWithUserDTO;
 import com.healthcare.modules.patient.dto.CreatePatientDTO;
 import com.healthcare.modules.patient.dto.PatientResponseDTO;
 import com.healthcare.modules.patient.dto.UpdatePatientDTO;
@@ -16,6 +17,7 @@ public interface PatientService {
     PageResponse<PatientResponseDTO> findAllPatients(int page, int size);
     PatientResponseDTO findPatientById(UUID id);
     void deletePatient(UUID id);
+    PageResponse<PatientResponseDTO> findPatientsFiltered(int page, int size, String search);
     PatientEntity findPatientEntityById(UUID id);
     PageResponse<PatientResponseDTO> findPatientsByArguments(String search, Sex sex, DocumentType documentType, int page, int size);
 }

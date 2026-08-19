@@ -2,6 +2,7 @@ package com.healthcare.modules.patient.service;
 
 import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.modules.patient.enums.Sex;
+import com.healthcare.modules.patient.repository.specifications.PatientSpecifications;
 import com.healthcare.shared.exceptions.ApplicationException;
 import com.healthcare.shared.exceptions.ErrorMessage;
 import com.healthcare.modules.patient.dto.CreatePatientDTO;
@@ -17,6 +18,7 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -154,6 +156,33 @@ public class PatientServiceImpl implements PatientService {
 
         PatientEntity user = this.findPatientEntityById(id);
         patientRepository.deleteById(user.getId());
+    }
+
+    @Override
+    public PageResponse<PatientResponseDTO> findPatientsFiltered(int page, int size, String search) {
+        Specification<PatientEntity> spec = Specification.where(PatientSpecifications.search(search));
+
+        Pageable pageable = PageRequest.of(
+                page,
+                Math.min(size, 10),
+                Sort.by(Sort.Direction.ASC, "fullName")
+        );
+
+        Page<PatientEntity> result = patientRepository.findAll(spec, pageable);
+
+        return new PageResponse<>(
+                result.getContent()
+                        .stream()
+                        .map(patient ->
+                                PatientResponseDTO.fromEntity(
+                                        patient)
+                        )
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
     }
 
     @Override
