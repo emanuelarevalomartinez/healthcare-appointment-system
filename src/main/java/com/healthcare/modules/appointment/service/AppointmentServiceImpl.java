@@ -66,7 +66,7 @@ public class AppointmentServiceImpl implements AppointmentService {
         newAppointment.setAppointmentDateTime(createAppointmentDTO.appointmentDateTime());
         newAppointment.setDurationMinutes(createAppointmentDTO.durationMinutes());
         newAppointment.setConsultationReason(createAppointmentDTO.consultationReason());
-        newAppointment.setStatus(AppointmentStatus.CONFIRMED);
+        newAppointment.setStatus(AppointmentStatus.SCHEDULED);
         newAppointment.setCreatedBy(userEntity);
         newAppointment.setCreatedAt(LocalDateTime.now());
 

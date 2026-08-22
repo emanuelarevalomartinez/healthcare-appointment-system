@@ -1,8 +1,13 @@
 
 
 // TODO
-//
-// corregir el hecho de que el paciente se crea con un id que el cliente debe propircionar y eso sin embanrgo debe propircionarlo el sistema
+// tengo que evitar que se cree una cita a partir del calculo de la fecha y la hora y el tiempo que dura, asi como que no sea el mismo doctor y paciente, el paciente tampoco puede tener una cita en ese mismo horario
+
+SCHEDULED → La cita ha sido programada.
+CONFIRMED → el paciente confirmó su asistencia.  o el doctor su disponibilidad
+ATTENDED → el paciente asistió.
+CANCELLED → la cita fue cancelada.
+NO_SHOW → el paciente no se presentó.
 
 // crear metodo en el update de appointment para solo dejar actualizar segun el estado que posea el usuario y confirmed y attended no deberian venir del backend si no implementarlos en el backend
 
