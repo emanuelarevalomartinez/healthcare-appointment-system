@@ -1,7 +1,7 @@
 
 
 // TODO
-// tengo que evitar que se cree una cita a partir del calculo de la fecha y la hora y el tiempo que dura, asi como que no sea el mismo doctor y paciente, el paciente tampoco puede tener una cita en ese mismo horario
+// al actualizar la cita del paciente con estado cancelado, el tiempo de finalizacion deberia ser liverado para alguien que quiera hacer una nueva cita, asi como cuando se cancela la cita debe se actualizar o llenar el campo de cancellebBy para saber quien en el sistema lo hizo
 
 SCHEDULED → La cita ha sido programada.
 CONFIRMED → el paciente confirmó su asistencia.  o el doctor su disponibilidad

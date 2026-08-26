@@ -20,8 +20,10 @@ public enum ErrorMessage {
     REMINDER_NOT_FOUND_ID(404, "REMINDER_NOT_FOUND_ID", "Recordatorio con id no encontrado"),
     AUDIT_NOT_FOUND_ID(404, "AUDIT_NOT_FOUND_ID", "Auditoria con id no encontrado"),
 
-    APPOINTMENT_FINAL_STATUS(404,"APPOINTMENT_FINAL_STATUS", "Las citas en estado terminal no se pueden modificar."),
-    APPOINTMENT_INVALID_STATUS_TRANSITION(404, "APPOINTMENT_INVALID_STATUS_TRANSITION","Transición de estado de cita no válida"),
+    APPOINTMENT_FINAL_STATUS(409,"APPOINTMENT_FINAL_STATUS", "Las citas en estado terminal no se pueden modificar."),
+    APPOINTMENT_INVALID_STATUS_TRANSITION(409, "APPOINTMENT_INVALID_STATUS_TRANSITION","Transición de estado de cita no válida"),
+    APPOINTMENT_DOCTOR_SCHEDULE_CONFLICT(409, "APPOINTMENT_DOCTOR_SCHEDULE_CONFLICT", "El doctor ya tiene una cita programada en el horario seleccionado."),
+    APPOINTMENT_PATIENT_SCHEDULE_CONFLICT(409, "APPOINTMENT_PATIENT_SCHEDULE_CONFLICT", "El paciente ya tiene una cita programada en el horario seleccionado."),
 
     INVALID_CREDENTIALS(401, "INVALID_CREDENTIALS", "Credenciales inválidas"),
     INVALID_CHANGE_PASSWORD(400, "INVALID_CHANGE_PASSWORD", "La contraseña actual no coincide con la que intenta introducir"),

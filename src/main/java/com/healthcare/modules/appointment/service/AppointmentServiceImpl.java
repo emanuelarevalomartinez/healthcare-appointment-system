@@ -54,6 +54,29 @@ public class AppointmentServiceImpl implements AppointmentService {
         DoctorEntity doctorEntity = this.doctorService.findDoctorEntityById(createAppointmentDTO.doctorId());
         PatientEntity patientEntity = this.patientService.findPatientEntityById(createAppointmentDTO.patientId());
 
+        LocalDateTime appointmentStart = createAppointmentDTO.appointmentDateTime();
+        LocalDateTime appointmentEnd = appointmentStart.plusMinutes(createAppointmentDTO.durationMinutes());
+
+        boolean doctorHasConflict = this.appointmentRepository.existsDoctorConflict(
+                        doctorEntity.getId(),
+                        appointmentStart,
+                        appointmentEnd
+                );
+
+        if (doctorHasConflict) {
+            throw new ApplicationException(ErrorMessage.APPOINTMENT_DOCTOR_SCHEDULE_CONFLICT, "");
+        }
+
+        boolean patientHasConflict = this.appointmentRepository.existsPatientConflict(
+                        patientEntity.getId(),
+                        appointmentStart,
+                        appointmentEnd
+                );
+
+        if (patientHasConflict) {
+            throw new ApplicationException(ErrorMessage.APPOINTMENT_PATIENT_SCHEDULE_CONFLICT, "");
+        }
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID userId = userAuthenticatedDetails.getId();
