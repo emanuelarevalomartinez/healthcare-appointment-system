@@ -154,6 +154,13 @@ public class AppointmentServiceImpl implements AppointmentService {
 
             if (newStatus == AppointmentStatus.CANCELLED) {
                 appointment.setCancellationReason(dto.cancellationReason());
+
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
+                UUID userId = userAuthenticatedDetails.getId();
+
+                UserEntity userEntity = this.userService.findUserEntityById(userId);
+                appointment.setCancelledBy(userEntity);
             }
         }
 
