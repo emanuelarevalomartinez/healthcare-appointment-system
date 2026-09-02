@@ -1,17 +1,8 @@
 
 
 // TODO
-// al actualizar la cita del paciente con estado cancelado, el tiempo de finalizacion deberia ser liverado para alguien que quiera hacer una nueva cita, asi como cuando se cancela la cita debe se actualizar o llenar el campo de cancellebBy para saber quien en el sistema lo hizo
-
-SCHEDULED → La cita ha sido programada.
-CONFIRMED → el paciente confirmó su asistencia.  o el doctor su disponibilidad
-ATTENDED → el paciente asistió.
-CANCELLED → la cita fue cancelada.
-NO_SHOW → el paciente no se presentó.
-
-// crear metodo en el update de appointment para solo dejar actualizar segun el estado que posea el usuario y confirmed y attended no deberian venir del backend si no implementarlos en el backend
-
-// a�adir un endpoint de actualizar todos los campos de el appoitment sin tener en cuenta el hecho de el estado
+// el endpoint actual para filtrar las citas no me es util para filtrar sin tener en cuenta la fecha hay que crear otro endpoint
+// los endpoint de appointment deben funcionar acorde al rol del usuario ya sea doctor u otro para que solo vea los datos que le corresponden
 
 // el modulo e reminder realmente n ose crea mediante endpoint si no de forma interna automatica dentro de la api
 

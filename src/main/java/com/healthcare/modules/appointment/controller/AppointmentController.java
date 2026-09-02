@@ -23,9 +23,6 @@ import java.util.UUID;
 @RequestMapping("/appointments")
 public class AppointmentController {
 
-    // TODO
-    // generar el endpoint de cancelar la cita
-
     private final AppointmentService appointmentService;
 
     public AppointmentController(AppointmentService appointmentService) {
