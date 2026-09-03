@@ -2,6 +2,7 @@ package com.healthcare.modules.appointment.dto;
 
 import com.healthcare.modules.appointment.entity.AppointmentEntity;
 import com.healthcare.modules.appointment.enums.AppointmentStatus;
+import com.healthcare.modules.patient.enums.DocumentType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -19,6 +20,8 @@ public record AppointmentResponseDTO(
         LocalDateTime confirmedAt,
         LocalDateTime attendedAt,
         String notes,
+        String medicalRecordNumber,
+        DocumentType documentType,
         String patientFullName,
         String doctorFullName
 ) {
@@ -35,6 +38,9 @@ public record AppointmentResponseDTO(
             doctorFullName = appointment.getDoctor().getUser().getUsername();
         }
 
+        String medicalRecordNumber = appointment.getPatient() != null ? appointment.getPatient().getMedicalRecordNumber() : null;
+        DocumentType documentType = appointment.getPatient() != null ? appointment.getPatient().getDocumentType() : null;
+
         return new AppointmentResponseDTO(
                 appointment.getId(),
                 appointment.getAppointmentDateTime(),
@@ -48,6 +54,8 @@ public record AppointmentResponseDTO(
                 appointment.getConfirmedAt(),
                 appointment.getAttendedAt(),
                 appointment.getNotes(),
+                medicalRecordNumber,
+                documentType,
                 patientFullName,
                 doctorFullName
         );

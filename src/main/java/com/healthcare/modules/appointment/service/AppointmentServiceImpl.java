@@ -58,20 +58,20 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalDateTime appointmentEnd = appointmentStart.plusMinutes(createAppointmentDTO.durationMinutes());
 
         boolean doctorHasConflict = this.appointmentRepository.existsDoctorConflict(
-                        doctorEntity.getId(),
-                        appointmentStart,
-                        appointmentEnd
-                );
+                doctorEntity.getId(),
+                appointmentStart,
+                appointmentEnd
+        );
 
         if (doctorHasConflict) {
             throw new ApplicationException(ErrorMessage.APPOINTMENT_DOCTOR_SCHEDULE_CONFLICT, "");
         }
 
         boolean patientHasConflict = this.appointmentRepository.existsPatientConflict(
-                        patientEntity.getId(),
-                        appointmentStart,
-                        appointmentEnd
-                );
+                patientEntity.getId(),
+                appointmentStart,
+                appointmentEnd
+        );
 
         if (patientHasConflict) {
             throw new ApplicationException(ErrorMessage.APPOINTMENT_PATIENT_SCHEDULE_CONFLICT, "");
@@ -218,6 +218,30 @@ public class AppointmentServiceImpl implements AppointmentService {
         );
     }
 
+    @Override
+    public PageResponse<AppointmentResponseDTO> searchAppointments(int page, int size, boolean ascending, String searchTerm, AppointmentStatus appointmentStatus, DocumentType documentType) {
+
+        Specification<AppointmentEntity> spec = buildSearchSpecification(searchTerm, appointmentStatus, documentType);
+
+        Sort sort = Sort.by(
+                ascending ? Sort.Direction.ASC : Sort.Direction.DESC,
+                "appointmentDateTime"
+        );
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<AppointmentEntity> result = appointmentRepository.findAll(spec, pageable);
+
+        return new PageResponse<>(
+                result.getContent().stream()
+                        .map(AppointmentResponseDTO::fromEntity)
+                        .toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages()
+        );
+    }
+
 
     @Override
     public AppointmentEntity findAppointmentEntityById(UUID id) {
@@ -244,5 +268,31 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (!valid && current != next) {
             throw new ApplicationException(ErrorMessage.APPOINTMENT_INVALID_STATUS_TRANSITION, "");
         }
+    }
+
+    private Specification<AppointmentEntity> buildSearchSpecification(
+            String searchTerm,
+            AppointmentStatus appointmentStatus,
+            DocumentType documentType) {
+        Specification<AppointmentEntity> spec = (root, query, cb) -> cb.conjunction();
+
+        if (appointmentStatus != null) {
+            spec = spec.and(AppointmentSpecifications.hasAppointmentStatus(appointmentStatus));
+        }
+
+        if (documentType != null) {
+            spec = spec.and(AppointmentSpecifications.hasDocumentType(documentType));
+        }
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            String term = searchTerm.trim();
+            Specification<AppointmentEntity> searchSpec =
+                    Specification.where(AppointmentSpecifications.hasPatientFullName(term))
+                            .or(AppointmentSpecifications.hasPatientMedicalRecordNumber(term))
+                            .or(AppointmentSpecifications.hasDoctorUsername(term));
+
+            spec = spec.and(searchSpec);
+        }
+        return spec;
     }
 }

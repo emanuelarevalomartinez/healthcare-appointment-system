@@ -105,6 +105,25 @@ public class AppointmentController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<AppointmentResponseDTO>>> searchAppointments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "true") boolean ascending,
+            @RequestParam(required = true) String searchTerm,
+            @RequestParam(required = false) AppointmentStatus appointmentStatus,
+            @RequestParam(required = false) DocumentType documentType
+    ) {
+        PageResponse<AppointmentResponseDTO> appointments =
+                appointmentService.searchAppointments(page, size, ascending, searchTerm, appointmentStatus, documentType);
+
+        return ResponseHandler.generateResponse(
+                HttpStatus.OK,
+                null,
+                appointments
+        );
+    }
+
     @DeleteMapping("{id}")
     public ResponseEntity<ApiResponse<Boolean>> deleteAppointmentById(@PathVariable UUID id) {
 

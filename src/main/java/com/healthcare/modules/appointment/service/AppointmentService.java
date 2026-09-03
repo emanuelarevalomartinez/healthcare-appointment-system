@@ -20,7 +20,9 @@ public interface AppointmentService {
 
     AppointmentResponseDTO findAppointmentById(UUID id);
 
-    PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, boolean ascending,LocalDate date, AppointmentStatus appointmentStatus, String patientFullName, String doctorUserName, String patientMedicalRecordNumber, DocumentType patientDocumentType, String patientDocumentNumber, String doctorSpecialty, String doctorLicenseNumber);
+    PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, boolean ascending, LocalDate date, AppointmentStatus appointmentStatus, String patientFullName, String doctorUserName, String patientMedicalRecordNumber, DocumentType patientDocumentType, String patientDocumentNumber, String doctorSpecialty, String doctorLicenseNumber);
+
+    PageResponse<AppointmentResponseDTO> searchAppointments(int page, int size, boolean ascending, String searchTerm, AppointmentStatus appointmentStatus, DocumentType documentType);
 
     AppointmentEntity findAppointmentEntityById(UUID id);
 
