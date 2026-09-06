@@ -1,14 +1,14 @@
 
 
 // TODO
-// el endpoint actual para filtrar las citas no me es util para filtrar sin tener en cuenta la fecha hay que crear otro endpoint
-// los endpoint de appointment deben funcionar acorde al rol del usuario ya sea doctor u otro para que solo vea los datos que le corresponden
+// hay que incluir filtrar el paciente por Nombre, Teléfono y Documento de identidad
+// incluir en el registro de usuarios en el caso de doctor el horario medico establecido para que trabaje asi como todos los datos restantes pertinentes
+// crud de el horario medico
+
 
 // el modulo e reminder realmente n ose crea mediante endpoint si no de forma interna automatica dentro de la api
 
 // ver si la tabla de auditoria es actualizable o no
-
-
 
 
 @Service
