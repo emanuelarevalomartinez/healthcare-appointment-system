@@ -1,9 +1,7 @@
 package com.healthcare.modules.appointment.controller;
 
 
-import com.healthcare.modules.appointment.dto.AppointmentResponseDTO;
-import com.healthcare.modules.appointment.dto.CreateAppointmentDTO;
-import com.healthcare.modules.appointment.dto.UpdateAppointmentDTO;
+import com.healthcare.modules.appointment.dto.*;
 import com.healthcare.modules.appointment.enums.AppointmentStatus;
 import com.healthcare.modules.appointment.service.AppointmentService;
 import com.healthcare.modules.patient.enums.DocumentType;
@@ -60,16 +58,18 @@ public class AppointmentController {
             @RequestParam(defaultValue = "true") boolean ascending,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) AppointmentStatus appointmentStatus,
-            @RequestParam(required = false)String patientFullName,
-            @RequestParam(required = false)String doctorUserName,
-            @RequestParam(required = false)String patientMedicalRecordNumber,
-            @RequestParam(required = false)DocumentType patientDocumentType,
-            @RequestParam(required = false)String patientDocumentNumber,
-            @RequestParam(required = false)String doctorSpecialty,
-            @RequestParam(required = false)String doctorLicenseNumber
-            ) {
+            @RequestParam(required = false) String patientFullName,
+            @RequestParam(required = false) String doctorUserName,
+            @RequestParam(required = false) String patientMedicalRecordNumber,
+            @RequestParam(required = false) DocumentType patientDocumentType,
+            @RequestParam(required = false) String patientDocumentNumber,
+            @RequestParam(required = false) String doctorSpecialty,
+            @RequestParam(required = false) String doctorLicenseNumber
+    ) {
 
-        PageResponse<AppointmentResponseDTO> appointments = this.appointmentService.findAppointmentsFiltered(page, size, ascending, date, appointmentStatus, patientFullName, doctorUserName, patientMedicalRecordNumber, patientDocumentType, patientDocumentNumber, doctorSpecialty, doctorLicenseNumber);
+        AppointmentFilterParams appointmentFilterParams = new AppointmentFilterParams(page, size, ascending, date, appointmentStatus, patientFullName, doctorUserName, patientMedicalRecordNumber, patientDocumentType, patientDocumentNumber, doctorSpecialty, doctorLicenseNumber);
+
+        PageResponse<AppointmentResponseDTO> appointments = this.appointmentService.findAppointmentsFiltered(appointmentFilterParams);
 
         return ResponseHandler.generateResponse(
                 HttpStatus.OK,
@@ -114,8 +114,10 @@ public class AppointmentController {
             @RequestParam(required = false) AppointmentStatus appointmentStatus,
             @RequestParam(required = false) DocumentType documentType
     ) {
-        PageResponse<AppointmentResponseDTO> appointments =
-                appointmentService.searchAppointments(page, size, ascending, searchTerm, appointmentStatus, documentType);
+
+        AppointmentSearchParams params = new AppointmentSearchParams(page, size, ascending, searchTerm, appointmentStatus, documentType);
+
+        PageResponse<AppointmentResponseDTO> appointments = appointmentService.searchAppointments(params);
 
         return ResponseHandler.generateResponse(
                 HttpStatus.OK,

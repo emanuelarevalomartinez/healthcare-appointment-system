@@ -1,22 +1,22 @@
 package com.healthcare.modules.appointment.service;
 
-import com.healthcare.modules.appointment.dto.AppointmentResponseDTO;
-import com.healthcare.modules.appointment.dto.CreateAppointmentDTO;
-import com.healthcare.modules.appointment.dto.UpdateAppointmentDTO;
+import com.healthcare.modules.appointment.dto.*;
 import com.healthcare.modules.appointment.entity.AppointmentEntity;
 import com.healthcare.modules.appointment.enums.AppointmentStatus;
 import com.healthcare.modules.appointment.repository.AppointmentRepository;
 import com.healthcare.modules.appointment.repository.specifications.AppointmentSpecifications;
+import com.healthcare.modules.appointment.service.role.AppointmentSpecificationQuery;
+import com.healthcare.modules.appointment.service.role.DoctorAppointmentExecutor;
+import com.healthcare.modules.auth.service.AuthService;
 import com.healthcare.modules.doctor.entity.DoctorEntity;
 import com.healthcare.modules.doctor.service.DoctorService;
 import com.healthcare.modules.patient.entity.PatientEntity;
-import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.modules.patient.service.PatientService;
 import com.healthcare.modules.user.entity.UserEntity;
+import com.healthcare.modules.user.enums.UserRole;
 import com.healthcare.modules.user.service.UserService;
 import com.healthcare.shared.exceptions.ApplicationException;
 import com.healthcare.shared.exceptions.ErrorMessage;
-import com.healthcare.shared.providers.CustomUserDetails;
 import com.healthcare.shared.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,11 +24,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -40,12 +37,16 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final DoctorService doctorService;
     private final UserService userService;
     private final AppointmentRepository appointmentRepository;
+    private final AuthService authService;
+    private final DoctorAppointmentExecutor doctorAppointmentExecutor;
 
-    public AppointmentServiceImpl(PatientService patientService, DoctorService doctorService, UserService userService, AppointmentRepository appointmentRepository) {
+    public AppointmentServiceImpl(PatientService patientService, DoctorService doctorService, UserService userService, AppointmentRepository appointmentRepository, AuthService authService, DoctorAppointmentExecutor doctorAppointmentExecutor) {
         this.patientService = patientService;
         this.doctorService = doctorService;
         this.userService = userService;
         this.appointmentRepository = appointmentRepository;
+        this.authService = authService;
+        this.doctorAppointmentExecutor = doctorAppointmentExecutor;
     }
 
     @Override
@@ -77,9 +78,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             throw new ApplicationException(ErrorMessage.APPOINTMENT_PATIENT_SCHEDULE_CONFLICT, "");
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UUID userId = userAuthenticatedDetails.getId();
+        UUID userId = authService.getCurrentUserId();
 
         UserEntity userEntity = this.userService.findUserEntityById(userId);
 
@@ -155,9 +154,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             if (newStatus == AppointmentStatus.CANCELLED) {
                 appointment.setCancellationReason(dto.cancellationReason());
 
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-                UUID userId = userAuthenticatedDetails.getId();
+                UUID userId = authService.getCurrentUserId();
 
                 UserEntity userEntity = this.userService.findUserEntityById(userId);
                 appointment.setCancelledBy(userEntity);
@@ -185,27 +182,21 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(int page, int size, boolean ascending, LocalDate date, AppointmentStatus appointmentStatus, String patientFullName, String doctorUserName, String patientMedicalRecordNumber, DocumentType patientDocumentType, String patientDocumentNumber, String doctorSpecialty, String doctorLicenseNumber) {
+    public PageResponse<AppointmentResponseDTO> findAppointmentsFiltered(
+            AppointmentFilterParams params
+    ) {
+        AppointmentSpecificationQuery query;
 
-        Specification<AppointmentEntity> spec = Specification
-                .where(AppointmentSpecifications.hasDate(date))
-                .and(AppointmentSpecifications.hasPatientFullName(patientFullName))
-                .and(AppointmentSpecifications.hasDoctorUsername(doctorUserName))
-                .and(AppointmentSpecifications.hasPatientMedicalRecordNumber(patientMedicalRecordNumber))
-                .and(AppointmentSpecifications.hasPatientDocumentNumber(patientDocumentNumber))
-                .and(AppointmentSpecifications.hasDocumentType(patientDocumentType))
-                .and(AppointmentSpecifications.hasDoctorSpecialty(doctorSpecialty))
-                .and(AppointmentSpecifications.hasDoctorLicenseNumber(doctorLicenseNumber))
-                .and(AppointmentSpecifications.hasAppointmentStatus(appointmentStatus));
+        if (authService.getCurrentRole().equals(UserRole.DOCTOR)) {
+            query = doctorAppointmentExecutor.findAppointmentsFilteredByDoctor(params);
+        } else {
+            query = buildDefaultFindAppointmentFilteredQuery(params);
+        }
 
-        Sort sort = Sort.by(
-                ascending ? Sort.Direction.ASC : Sort.Direction.DESC,
-                "appointmentDateTime"
-        );
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Page<AppointmentEntity> result = appointmentRepository.findAll(spec, pageable);
+        Page<AppointmentEntity> result = appointmentRepository.findAll(
+                        query.specification(),
+                        query.pageable()
+                );
 
         return new PageResponse<>(
                 result.getContent().stream()
@@ -219,17 +210,21 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     @Override
-    public PageResponse<AppointmentResponseDTO> searchAppointments(int page, int size, boolean ascending, String searchTerm, AppointmentStatus appointmentStatus, DocumentType documentType) {
+    public PageResponse<AppointmentResponseDTO> searchAppointments(
+            AppointmentSearchParams params
+    ) {
+        AppointmentSpecificationQuery query;
 
-        Specification<AppointmentEntity> spec = buildSearchSpecification(searchTerm, appointmentStatus, documentType);
+        if (authService.getCurrentRole().equals(UserRole.DOCTOR)) {
+            query = doctorAppointmentExecutor.searchAppointmentsFilteredByDoctor(params);
+        } else {
+            query = buildDefaultFindAppointmentSearchQuery(params);
+        }
 
-        Sort sort = Sort.by(
-                ascending ? Sort.Direction.ASC : Sort.Direction.DESC,
-                "appointmentDateTime"
+        Page<AppointmentEntity> result = appointmentRepository.findAll(
+                query.specification(),
+                query.pageable()
         );
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<AppointmentEntity> result = appointmentRepository.findAll(spec, pageable);
 
         return new PageResponse<>(
                 result.getContent().stream()
@@ -270,22 +265,43 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
     }
 
-    private Specification<AppointmentEntity> buildSearchSpecification(
-            String searchTerm,
-            AppointmentStatus appointmentStatus,
-            DocumentType documentType) {
+    private AppointmentSpecificationQuery buildDefaultFindAppointmentFilteredQuery(
+            AppointmentFilterParams params
+    ) {
+
+        Specification<AppointmentEntity> spec = Specification
+                .where(AppointmentSpecifications.hasDate(params.date()))
+                .and(AppointmentSpecifications.hasPatientFullName(params.patientFullName()))
+                .and(AppointmentSpecifications.hasDoctorUsername(params.doctorUserName()))
+                .and(AppointmentSpecifications.hasPatientMedicalRecordNumber(params.patientMedicalRecordNumber()))
+                .and(AppointmentSpecifications.hasPatientDocumentNumber(params.patientDocumentNumber()))
+                .and(AppointmentSpecifications.hasDocumentType(params.patientDocumentType()))
+                .and(AppointmentSpecifications.hasDoctorSpecialty(params.doctorSpecialty()))
+                .and(AppointmentSpecifications.hasDoctorLicenseNumber(params.doctorLicenseNumber()))
+                .and(AppointmentSpecifications.hasAppointmentStatus(params.appointmentStatus()));
+
+        Sort sort = Sort.by(params.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                "appointmentDateTime"
+        );
+
+        Pageable pageable = PageRequest.of(params.page(), params.size(), sort);
+        return new AppointmentSpecificationQuery(spec, pageable);
+    }
+
+    private AppointmentSpecificationQuery buildDefaultFindAppointmentSearchQuery(
+            AppointmentSearchParams params) {
         Specification<AppointmentEntity> spec = (root, query, cb) -> cb.conjunction();
 
-        if (appointmentStatus != null) {
-            spec = spec.and(AppointmentSpecifications.hasAppointmentStatus(appointmentStatus));
+        if (params.appointmentStatus() != null) {
+            spec = spec.and(AppointmentSpecifications.hasAppointmentStatus(params.appointmentStatus()));
         }
 
-        if (documentType != null) {
-            spec = spec.and(AppointmentSpecifications.hasDocumentType(documentType));
+        if (params.documentType() != null) {
+            spec = spec.and(AppointmentSpecifications.hasDocumentType(params.documentType()));
         }
 
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            String term = searchTerm.trim();
+        if (params.searchTerm() != null && !params.searchTerm().trim().isEmpty()) {
+            String term = params.searchTerm().trim();
             Specification<AppointmentEntity> searchSpec =
                     Specification.where(AppointmentSpecifications.hasPatientFullName(term))
                             .or(AppointmentSpecifications.hasPatientMedicalRecordNumber(term))
@@ -293,6 +309,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
             spec = spec.and(searchSpec);
         }
-        return spec;
+        Sort sort = Sort.by(params.ascending() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                "appointmentDateTime"
+        );
+
+        Pageable pageable = PageRequest.of(params.page(), params.size(), sort);
+        return new AppointmentSpecificationQuery(spec, pageable);
     }
 }

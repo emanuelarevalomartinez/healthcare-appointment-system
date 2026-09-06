@@ -1,8 +1,8 @@
 package com.healthcare.modules.user.service;
 
+import com.healthcare.modules.auth.providers.CustomUserDetails;
 import com.healthcare.modules.user.entity.UserEntity;
 import com.healthcare.modules.user.repository.UserRepository;
-import com.healthcare.shared.providers.CustomUserDetails;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

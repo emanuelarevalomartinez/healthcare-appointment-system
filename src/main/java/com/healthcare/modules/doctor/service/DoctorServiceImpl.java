@@ -1,5 +1,6 @@
 package com.healthcare.modules.doctor.service;
 
+import com.healthcare.modules.auth.service.AuthService;
 import com.healthcare.modules.doctor.dto.*;
 import com.healthcare.modules.doctor.entity.DoctorEntity;
 import com.healthcare.modules.doctor.entity.specifications.DoctorSpecifications;
@@ -11,7 +12,6 @@ import com.healthcare.modules.user.repository.UserRepository;
 import com.healthcare.modules.user.service.UserService;
 import com.healthcare.shared.exceptions.ApplicationException;
 import com.healthcare.shared.exceptions.ErrorMessage;
-import com.healthcare.shared.providers.CustomUserDetails;
 import com.healthcare.shared.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,8 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +34,14 @@ public class DoctorServiceImpl implements DoctorService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final AuthService authService;
 
-    public DoctorServiceImpl(DoctorRepository doctorRepository, UserRepository userRepository, UserService userService, PasswordEncoder passwordEncoder) {
+    public DoctorServiceImpl(DoctorRepository doctorRepository, UserRepository userRepository, UserService userService, PasswordEncoder passwordEncoder, AuthService authService) {
         this.doctorRepository = doctorRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
     }
 
     @Override
@@ -61,10 +61,7 @@ public class DoctorServiceImpl implements DoctorService {
             throw new ApplicationException(ErrorMessage.DOCTOR_LICENSE_NUMBER_ALREADY_EXISTS, createDoctorDTO.licenseNumber());
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UUID userId = userAuthenticatedDetails.getId();
-
+        UUID userId = authService.getCurrentUserId();
         UserEntity autenticateUserEntity = this.userService.findUserEntityById(userId);
 
         DoctorEntity newDoctor = new DoctorEntity();
@@ -101,9 +98,7 @@ public class DoctorServiceImpl implements DoctorService {
             findDoctor.setDefaultConsultationDuration(updateDoctorDTO.defaultConsultationDuration());
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UUID userId = userAuthenticatedDetails.getId();
+        UUID userId = authService.getCurrentUserId();
 
         UserEntity autenticateUserEntity = this.userService.findUserEntityById(userId);
         findDoctor.setModifiedBy(autenticateUserEntity);
@@ -132,9 +127,8 @@ public class DoctorServiceImpl implements DoctorService {
             throw new ApplicationException(ErrorMessage.DOCTOR_LICENSE_NUMBER_ALREADY_EXISTS, createDoctorWithUserDTO.licenseNumber());
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UserEntity autenticateUserEntity = this.userService.findUserEntityById(userAuthenticatedDetails.getId());
+        UUID userId = authService.getCurrentUserId();
+        UserEntity user = userService.findUserEntityById(userId);
 
         UserEntity newUser = new UserEntity();
         newUser.setUsername(createDoctorWithUserDTO.username());
@@ -147,7 +141,7 @@ public class DoctorServiceImpl implements DoctorService {
 
         DoctorEntity newDoctor = new DoctorEntity();
         newDoctor.setUser(userSaved);
-        newDoctor.setModifiedBy(autenticateUserEntity);
+        newDoctor.setModifiedBy(user);
         newDoctor.setSpecialty(createDoctorWithUserDTO.specialty());
         newDoctor.setLicenseNumber(createDoctorWithUserDTO.licenseNumber());
         newDoctor.setDefaultConsultationDuration(createDoctorWithUserDTO.defaultConsultationDuration());
@@ -243,10 +237,8 @@ public class DoctorServiceImpl implements DoctorService {
             findDoctor.setDefaultConsultationDuration(updateDoctorWithUserDTO.defaultConsultationDuration());
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UserEntity autenticateUserEntity = this.userService.findUserEntityById(userAuthenticatedDetails.getId());
-        findDoctor.setModifiedBy(userService.findUserEntityById(autenticateUserEntity.getId()));
+        UUID userUuid = authService.getCurrentUserId();
+        findDoctor.setModifiedBy(userService.findUserEntityById(userUuid));
 
         userRepository.save(findUser);
 

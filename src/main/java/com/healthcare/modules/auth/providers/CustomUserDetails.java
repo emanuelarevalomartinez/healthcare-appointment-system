@@ -1,4 +1,4 @@
-package com.healthcare.shared.providers;
+package com.healthcare.modules.auth.providers;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

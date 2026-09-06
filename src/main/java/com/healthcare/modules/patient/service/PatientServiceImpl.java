@@ -1,5 +1,6 @@
 package com.healthcare.modules.patient.service;
 
+import com.healthcare.modules.auth.service.AuthService;
 import com.healthcare.modules.patient.enums.DocumentType;
 import com.healthcare.modules.patient.enums.Sex;
 import com.healthcare.modules.patient.repository.specifications.PatientSpecifications;
@@ -12,7 +13,6 @@ import com.healthcare.modules.patient.entity.PatientEntity;
 import com.healthcare.modules.patient.repository.PatientRepository;
 import com.healthcare.modules.user.entity.UserEntity;
 import com.healthcare.modules.user.service.UserService;
-import com.healthcare.shared.providers.CustomUserDetails;
 import com.healthcare.shared.response.PageResponse;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
@@ -20,8 +20,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,10 +31,12 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final UserService userService;
+    private final AuthService authService;
 
-    public PatientServiceImpl(PatientRepository patientRepository, UserService userService) {
+    public PatientServiceImpl(PatientRepository patientRepository, UserService userService, AuthService authService) {
         this.patientRepository = patientRepository;
         this.userService = userService;
+        this.authService = authService;
     }
 
     @Override
@@ -50,11 +50,8 @@ public class PatientServiceImpl implements PatientService {
             throw new ApplicationException(ErrorMessage.PATIENT_DOCUMENT_CONFLICT, createPatientDTO.documentNumber());
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails userAuthenticatedDetails = (CustomUserDetails) authentication.getPrincipal();
-        UUID userId = userAuthenticatedDetails.getId();
-
-        UserEntity user = this.userService.findUserEntityById(userId);
+        UUID userId = authService.getCurrentUserId();
+        UserEntity user = userService.findUserEntityById(userId);
 
         PatientEntity newPatient = new PatientEntity();
         newPatient.setMedicalRecordNumber(createPatientDTO.medicalRecordNumber());
