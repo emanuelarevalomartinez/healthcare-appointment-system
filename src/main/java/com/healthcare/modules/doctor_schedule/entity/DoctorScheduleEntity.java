@@ -6,10 +6,17 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalTime;
+import java.util.UUID;
 
 @Entity
 @Table(
-        name = "doctor_schedule"
+        name = "doctor_schedule",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_doctor_schedule_doctor_day",
+                        columnNames = {"doctor_id", "day_of_week"}
+                )
+        }
 )
 public class DoctorScheduleEntity {
 
@@ -21,7 +28,7 @@ public class DoctorScheduleEntity {
             updatable = false,
             columnDefinition = "UUID DEFAULT gen_random_uuid()"
     )
-    private UuidGenerator id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -61,11 +68,11 @@ public class DoctorScheduleEntity {
     public DoctorScheduleEntity() {
     }
 
-    public UuidGenerator getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(UuidGenerator id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

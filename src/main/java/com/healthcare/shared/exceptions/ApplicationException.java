@@ -28,7 +28,7 @@ public class ApplicationException extends RuntimeException {
         this.statusCode = err.getStatus();
         this.type = err.getType();
         this.origin = this.detectOriginClass();
-        this.message = String.format(err.getMessage() + data);
+        this.message = String.format(err.getMessage() + " " + data);
         this.data  = null;
         this.error = null;
     }
